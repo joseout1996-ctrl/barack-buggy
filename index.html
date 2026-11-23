@@ -1,22 +1,24 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111111">
-  <meta name="description" content="Conecte-se com o BARACK BUGGY. Acesse nosso Instagram ou copie nossa chave Pix.">
+  <meta name="description" content="Conecte-se com o BARACK BUGGY. Acesse nosso Instagram ou Pix.">
   <title>BARACK BUGGY | Conecte-se</title>
   <style>
     :root { color-scheme: dark; --gold:#d6b77a; --muted:#c9c0ad; }
     * { box-sizing: border-box; }
     body {
       margin:0; min-height:100vh; display:grid; place-items:center; padding:24px;
-      background: radial-gradient(ellipse at top, #29251d 0%, #111 48%, #090909 100%);
-      color:#f7f4ed; font-family:Arial, Helvetica, sans-serif;
+      background:radial-gradient(ellipse at top,#29251d 0%,#111 48%,#090909 100%);
+      color:#f7f4ed; font-family:Arial,Helvetica,sans-serif;
     }
     main {
-      width:min(100%, 430px); padding:34px 26px 26px; border:1px solid #665638;
-      border-radius:24px; background:rgba(20,20,20,.94);
+      width:min(100%,430px); padding:34px 26px 26px;
+      border:1px solid #665638; border-radius:24px;
+      background:rgba(20,20,20,.94);
       box-shadow:0 22px 70px rgba(0,0,0,.48); text-align:center;
     }
     .mark { color:var(--gold); font-size:clamp(27px,7vw,36px); font-weight:800; letter-spacing:3px; }
@@ -28,7 +30,7 @@
       display:flex; align-items:center; gap:14px; width:100%; min-height:62px; padding:15px 17px;
       margin:12px 0; border:1px solid #655638; border-radius:14px; background:#242321;
       color:#f7f4ed; text-decoration:none; font-size:15px; font-weight:700; text-align:left;
-      cursor:pointer; transition:background .2s, transform .2s;
+      cursor:pointer; transition:background .2s,transform .2s;
     }
     .action:hover { background:#302c24; transform:translateY(-1px); }
     .symbol { display:grid; place-items:center; width:32px; height:32px; color:var(--gold); flex:none; }
@@ -37,6 +39,30 @@
     .pix-note { color:#bdb6a7; font-size:12px; margin:16px 0 0; line-height:1.5; }
     #status { min-height:18px; margin-top:10px; color:#dfc58f; font-size:12px; }
     footer { color:#8f897d; font-size:10px; letter-spacing:1.5px; margin-top:25px; }
+
+    .qr-modal {
+      display:none; position:fixed; inset:0; z-index:10;
+      background:rgba(0,0,0,.94); padding:24px;
+      align-items:center; justify-content:center;
+    }
+    .qr-modal.open { display:flex; }
+    .qr-content {
+      width:min(100%,400px); text-align:center;
+      border:1px solid #665638; border-radius:20px;
+      background:#171614; padding:22px;
+    }
+    .qr-content h2 { color:var(--gold); font-size:19px; margin:0 0 18px; }
+    .qr-content img {
+      display:block; width:100%; height:auto;
+      max-height:65vh; object-fit:contain;
+      background:white; border-radius:10px;
+    }
+    .close-qr {
+      margin-top:20px; width:100%; padding:14px;
+      border:1px solid #8c754c; border-radius:12px;
+      background:#302c24; color:#f7f4ed;
+      font-weight:bold; font-size:14px; cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -60,16 +86,41 @@
       </span>
       <span>COPIAR CHAVE PIX</span><span class="arrow">⧉</span>
     </button>
+
+    <button class="action" id="qrButton" type="button">
+      <span class="symbol" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+          <path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/>
+        </svg>
+      </span>
+      <span>VER QR CODE PIX</span><span class="arrow">↗</span>
+    </button>
+
     <p class="pix-note">Ao tocar no botão, a chave Pix será copiada. Depois, é só colar no aplicativo do seu banco.</p>
     <div id="status" role="status" aria-live="polite"></div>
     <div class="rule"></div>
     <footer>OBRIGADO PELA PREFERÊNCIA</footer>
   </main>
 
+  <div class="qr-modal" id="qrModal" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+    <div class="qr-content">
+      <h2 id="qrTitle">PAGAMENTO VIA PIX</h2>
+      <img src="qr-pix.png" alt="QR Code Pix BARACK BUGGY">
+      <button class="close-qr" id="closeQr" type="button">VOLTAR</button>
+    </div>
+  </div>
+
   <script>
     const pixKey = "10865949409";
     const button = document.getElementById("pixButton");
     const status = document.getElementById("status");
+    const qrButton = document.getElementById("qrButton");
+    const qrModal = document.getElementById("qrModal");
+    const closeQr = document.getElementById("closeQr");
+
     button.addEventListener("click", async () => {
       try {
         if (navigator.clipboard && window.isSecureContext) {
@@ -87,6 +138,28 @@
         status.textContent = "Chave Pix copiada! Agora é só colar no seu banco.";
       } catch (e) {
         status.textContent = "Chave Pix: " + pixKey + " — copie manualmente.";
+      }
+    });
+
+    qrButton.addEventListener("click", () => {
+      qrModal.classList.add("open");
+      closeQr.focus();
+    });
+
+    function closeModal() {
+      qrModal.classList.remove("open");
+      qrButton.focus();
+    }
+
+    closeQr.addEventListener("click", closeModal);
+
+    qrModal.addEventListener("click", (event) => {
+      if (event.target === qrModal) closeModal();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && qrModal.classList.contains("open")) {
+        closeModal();
       }
     });
   </script>
